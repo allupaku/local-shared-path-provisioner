@@ -166,11 +166,11 @@ func (p *LocalPathProvisioner) Provision(opts pvController.VolumeOptions) (*v1.P
 	if pvc.Spec.Selector != nil {
 		return nil, fmt.Errorf("claim.Spec.Selector is not supported")
 	}
-	for _, accessMode := range pvc.Spec.AccessModes {
-		if accessMode != v1.ReadWriteOnce {
-			return nil, fmt.Errorf("Only support ReadWriteOnce access mode")
-		}
-	}
+	//for _, accessMode := range pvc.Spec.AccessModes {
+	//	if accessMode != v1.ReadWriteOnce {
+	//		return nil, fmt.Errorf("Only support ReadWriteOnce access mode")
+	//	}
+	//}
 	node := opts.SelectedNode
 	if opts.SelectedNode == nil {
 		return nil, fmt.Errorf("configuration error, no node was specified")
@@ -212,23 +212,24 @@ func (p *LocalPathProvisioner) Provision(opts pvController.VolumeOptions) (*v1.P
 					Type: &hostPathType,
 				},
 			},
-			NodeAffinity: &v1.VolumeNodeAffinity{
-				Required: &v1.NodeSelector{
-					NodeSelectorTerms: []v1.NodeSelectorTerm{
-						{
-							MatchExpressions: []v1.NodeSelectorRequirement{
-								{
-									Key:      KeyNode,
-									Operator: v1.NodeSelectorOpIn,
-									Values: []string{
-										node.Name,
-									},
-								},
-							},
-						},
-					},
-				},
-			},
+			//NodeAffinity: &v1.VolumeNodeAffinity{
+			//	Required: &v1.NodeSelector{
+			//	Required: &v1.NodeSelector{
+			//		NodeSelectorTerms: []v1.NodeSelectorTerm{
+			//			{
+			//				MatchExpressions: []v1.NodeSelectorRequirement{
+			//					{
+			//						Key:      KeyNode,
+			//						Operator: v1.NodeSelectorOpIn,
+			//						Values: []string{
+			//							node.Name,
+			//						},
+			//					},
+			//				},
+			//			},
+			//		},
+			//	},
+			//},
 		},
 	}, nil
 }
@@ -237,19 +238,19 @@ func (p *LocalPathProvisioner) Delete(pv *v1.PersistentVolume) (err error) {
 	defer func() {
 		err = errors.Wrapf(err, "failed to delete volume %v", pv.Name)
 	}()
-	path, node, err := p.getPathAndNodeForPV(pv)
-	if err != nil {
-		return err
-	}
-	if pv.Spec.PersistentVolumeReclaimPolicy != v1.PersistentVolumeReclaimRetain {
-		logrus.Infof("Deleting volume %v at %v:%v", pv.Name, node, path)
-		cleanupCmdsForPath := []string{"rm", "-rf"}
-		if err := p.createHelperPod(ActionTypeDelete, cleanupCmdsForPath, pv.Name, path, node); err != nil {
-			logrus.Infof("clean up volume %v failed: %v", pv.Name, err)
-			return err
-		}
-		return nil
-	}
+	//path, node, err := p.getPathAndNodeForPV(pv)
+	//if err != nil {
+	//	return err
+	//}
+	//if pv.Spec.PersistentVolumeReclaimPolicy != v1.PersistentVolumeReclaimRetain {
+	//	logrus.Infof("Deleting volume %v at %v:%v", pv.Name, node, path)
+	//	cleanupCmdsForPath := []string{"rm", "-rf"}
+	//	if err := p.createHelperPod(ActionTypeDelete, cleanupCmdsForPath, pv.Name, path, node); err != nil {
+	//		logrus.Infof("clean up volume %v failed: %v", pv.Name, err)
+	//		return err
+	//	}
+	//	return nil
+	//}
 	logrus.Infof("Retained volume %v", pv.Name)
 	return nil
 }
@@ -368,6 +369,8 @@ func (p *LocalPathProvisioner) createHelperPod(action ActionType, cmdsForPath []
 		e := p.kubeClient.CoreV1().Pods(p.namespace).Delete(helperPod.Name, &metav1.DeleteOptions{})
 		if e != nil {
 			logrus.Errorf("unable to delete the helper pod: %v", e)
+
+
 		}
 	}()
 
